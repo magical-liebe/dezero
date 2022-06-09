@@ -27,6 +27,9 @@ nptyping = "^2.1.1"
 package = "dezero"
 
 [tool.poe.tasks]
+    [tool.poe.tasks.run]
+    help = "Run Python"
+    cmd = "python"
     [tool.poe.tasks.lint]
     help = "Run flake8 on the code base"
     sequence = [

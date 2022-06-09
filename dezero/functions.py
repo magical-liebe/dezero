@@ -7,7 +7,7 @@ from dezero.core import Function, Variable
 
 
 class Square(Function):
-    """Square function."""
+    """Square function class."""
 
     def forward(self, x: NDArray) -> NDArray:
         """Forward propagation."""
@@ -21,7 +21,7 @@ class Square(Function):
 
 
 class Exp(Function):
-    """Exponential function."""
+    """Exponential function class."""
 
     def forward(self, x: NDArray) -> NDArray:
         """Forward propagation."""
@@ -34,17 +34,18 @@ class Exp(Function):
         return gx
 
 
+def square(x: Variable) -> Variable:
+    """Square function."""
+    return Square()(x)
+
+
+def exp(x: Variable) -> Variable:
+    """Exponential function."""
+    return Exp()(x)
+
+
 if __name__ == "__main__":
-    A = Square()
-    B = Exp()
-    C = Square()
-
     x = Variable(np.array(0.5))
-    a = A(x)
-    b = B(a)
-    y = C(b)
-    print(y.data)
-
-    y.grad = np.array(1.0)
+    y = square(exp(square(x)))
     y.backward()
     print(x.grad)
