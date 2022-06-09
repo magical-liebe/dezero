@@ -15,10 +15,12 @@ class Variable:
         self.data = data
         self.grad: NDArray | None = None
         self.creator: Function | None = None
+        self.generation: int = 0
 
     def set_creator(self, func: "Function") -> None:
         """Set creator function."""
         self.creator = func
+        self.generation = func.generation + 1
 
     def cleargrad(self) -> None:
         """Clear gradient."""
@@ -29,7 +31,17 @@ class Variable:
         if self.grad is None:
             self.grad = np.ones_like(self.data)
 
-        funcs = [self.creator]
+        funcs = []
+        seen_set = set()
+
+        def add_func(f: Function) -> None:
+            if f not in seen_set:
+                funcs.append(f)
+                seen_set.add(f)
+                funcs.sort(key=lambda x: x.generation)
+
+        add_func(self.creator)
+
         while funcs:
             f = funcs.pop()
             if f is not None:
@@ -45,7 +57,7 @@ class Variable:
                         x.grad = x.grad + gx
 
                     if x.creator is not None:
-                        funcs.append(x.creator)
+                        add_func(x.creator)
 
 
 class Function:
@@ -58,6 +70,8 @@ class Function:
         if not isinstance(ys, list):
             ys = [ys]
         outputs = [Variable(as_array(y)) for y in ys]
+
+        self.generation = max([x.generation for x in inputs])
 
         for output in outputs:
             output.set_creator(self)

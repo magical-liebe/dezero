@@ -109,6 +109,19 @@ def test_chain() -> None:
     assert x.grad == expected
 
 
+def test_fork() -> None:
+    """Test forked graph."""
+    k = 2.0
+
+    x = Variable(np.array(k))
+    a = square(x)
+    y = add(square(a), square(a))
+    y.backward()
+
+    assert y.data == 32.0
+    assert x.grad == 64.0
+
+
 def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps: float = 1e-4) -> float:
     """Numerical differentiation."""
     x0 = Variable(as_array(x.data - eps))
