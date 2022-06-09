@@ -4,4 +4,6 @@
 
 # DeZero
 
-Deep Learning Framework for Python.
+Deep Learning Framework for Python from Scratch.
+
+Based on this book: [ゼロから作るDeep Learning 3 -- フレームワーク編](https://www.oreilly.co.jp/books/9784873119069/)
