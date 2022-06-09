@@ -1,17 +1,62 @@
 [tool.poetry]
 name = "dezero"
 version = "0.1.0"
-description = ""
+description = "Deep Learning Framework for Python."
 authors = ["りーべ <magical.liebe@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10,<3.11"
 numpy = "^1.22.4"
-nptyping = "^2.1.1"
+single-source = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-black = {version = "^22.3.0", allow-prereleases = true}
+black = "^22.3.0"
+pyproject-flake8 = "^0.0.1a4"
+flake8-isort = "^4.1.1"
+flake8-annotations = "^2.9.0"
+flake8-docstrings = "^1.6.0"
+mypy = "^0.961"
+pytest = "^7.1.2"
+pytest-sugar = "^0.9.4"
+pytest-cov = "^3.0.0"
+poethepoet = "^0.13.1"
+pre-commit = "^2.19.0"
+nptyping = "^2.1.1"
+
+[tool.poe.env]
+package = "dezero"
+
+[tool.poe.tasks]
+    [tool.poe.tasks.lint]
+    help = "Run flake8 on the code base"
+    sequence = [
+        {cmd = "pflake8 ${package}/*.py tests/*.py"},
+        {cmd = "mypy ${package}/*.py tests/*.py"},
+    ]
+    [tool.poe.tasks.fix]
+    help = "Run black on the code base"
+    cmd  = "black ${package}/*.py tests/*.py"
+    [tool.poe.tasks.test]
+    help = "Run unit and feature tests"
+    cmd = "pytest -v --cov ${package} --cov-report term-missing"
+
+[tool.black]
+target-version = ['py310']
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203,W503,W504,ANN101"
+max-complexity = 10
+
+[tool.mypy]
+python_version = "3.10"
+no_strict_optional = true
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
