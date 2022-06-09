@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 
 from dezero.core import Variable, as_array
-from dezero.functions import exp, square
+from dezero.functions import add, exp, square
 
 
 class TestSquare:
@@ -55,6 +55,44 @@ class TestExp:
 
         num_grad = numerical_diff(exp, x)
         assert np.allclose(x.grad, num_grad)
+
+
+class TestAdd:
+    """Test class for add."""
+
+    def test_forward(self) -> None:
+        """Test forward."""
+        a = np.random.rand(1)
+        b = np.random.rand(1)
+
+        x = Variable(a)
+        y = Variable(b)
+        z = add(x, y)
+        expected = np.array(a + b)
+        assert z.data == expected
+
+    def test_backward(self) -> None:
+        """Test backward."""
+        a = np.random.rand(1)
+        b = np.random.rand(1)
+
+        x = Variable(a)
+        y = Variable(b)
+        z = add(x, y)
+        z.backward()
+        expected = np.array(1)
+        assert x.grad == expected
+        assert y.grad == expected
+
+        x.cleargrad()
+        y = add(x, x)
+        y.backward()
+        assert x.grad == 2 * expected
+
+        x.cleargrad()
+        y = add(add(x, x), x)
+        y.backward()
+        assert x.grad == 3 * expected
 
 
 def test_chain() -> None:

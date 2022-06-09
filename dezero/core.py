@@ -20,6 +20,10 @@ class Variable:
         """Set creator function."""
         self.creator = func
 
+    def cleargrad(self) -> None:
+        """Clear gradient."""
+        self.grad = None
+
     def backward(self) -> None:
         """Backward propagation."""
         if self.grad is None:
@@ -29,32 +33,45 @@ class Variable:
         while funcs:
             f = funcs.pop()
             if f is not None:
-                x, y = f.input, f.output
-                if y.grad is not None:
-                    x.grad = f.backward(y.grad)
+                gys = [output.grad for output in f.outputs]
+                gxs = f.backward(*gys)
+                if not isinstance(gxs, list):
+                    gxs = [gxs]
 
-                if x.creator is not None:
-                    funcs.append(x.creator)
+                for x, gx in zip(f.inputs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx
+
+                    if x.creator is not None:
+                        funcs.append(x.creator)
 
 
 class Function:
     """Function class."""
 
-    def __call__(self, input_v: Variable) -> Variable:
+    def __call__(self, *inputs: Variable) -> Variable | list[Variable]:
         """Call function."""
-        x = input_v.data
-        y = self.forward(x)
-        output = Variable(as_array(y))
-        output.set_creator(self)
-        self.input = input_v
-        self.output = output
-        return output
+        xs = [x.data for x in inputs]
+        ys = self.forward(*xs)
+        if not isinstance(ys, list):
+            ys = [ys]
+        outputs = [Variable(as_array(y)) for y in ys]
 
-    def forward(self, x: NDArray) -> NDArray:
+        for output in outputs:
+            output.set_creator(self)
+
+        self.inputs = inputs
+        self.outputs = outputs
+
+        return outputs if len(outputs) > 1 else outputs[0]
+
+    def forward(self, *xs: NDArray) -> NDArray | list[NDArray]:
         """Forward propagation."""
         raise NotImplementedError()
 
-    def backward(self, gy: NDArray) -> NDArray:
+    def backward(self, *gys: NDArray) -> NDArray | list[NDArray]:
         """Backward propagation."""
         raise NotImplementedError()
 
