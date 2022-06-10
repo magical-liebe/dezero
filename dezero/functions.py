@@ -39,13 +39,33 @@ class Add(Function):
 
     def forward(self, *xs: NDArray) -> NDArray | list[NDArray]:
         """Forward propagation."""
+        assert len(xs) == 2
         x0, x1 = xs
         y = x0 + x1
         return y
 
     def backward(self, *gys: NDArray) -> list[NDArray]:
         """Backward propagation."""
+        assert len(gys) == 1
         return [gys[0], gys[0]]
+
+
+class Mul(Function):
+    """Multiply function class."""
+
+    def forward(self, *xs: NDArray) -> NDArray | list[NDArray]:
+        """Forward propagation."""
+        assert len(xs) == 2
+        x0, x1 = xs
+        y = x0 * x1
+        return y
+
+    def backward(self, *gys: NDArray) -> list[NDArray]:
+        """Backward propagation."""
+        assert len(gys) == 1
+        gy = gys[0]
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        return [gy * x1, gy * x0]
 
 
 def square(x: Variable) -> Variable:
@@ -65,5 +85,12 @@ def exp(x: Variable) -> Variable:
 def add(x0: Variable, x1: Variable) -> Variable:
     """Add function."""
     y = Add()(x0, x1)
+    assert not isinstance(y, list)
+    return y
+
+
+def mul(x0: Variable, x1: Variable) -> Variable:
+    """Multiply function."""
+    y = Mul()(x0, x1)
     assert not isinstance(y, list)
     return y

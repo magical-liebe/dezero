@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dezero"
 version = "0.1.0"
-description = "Deep Learning Framework for Python."
+description = "Deep Learning Framework for Python from Scratch."
 authors = ["りーべ <magical.liebe@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -50,7 +50,7 @@ line-length = 120
 [tool.flake8]
 max-line-length = 120
 extend-ignore = "E203,W503,W504,ANN101"
-max-complexity = 10
+max-complexity = 15
 
 [tool.mypy]
 python_version = "3.10"

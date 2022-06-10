@@ -3,9 +3,11 @@
 from typing import Callable
 
 import numpy as np
+import pytest
 
+from dezero.config import no_grad
 from dezero.core import Variable, as_array
-from dezero.functions import add, exp, square
+from dezero.functions import add, exp, mul, square
 
 
 class TestSquare:
@@ -95,6 +97,28 @@ class TestAdd:
         assert x.grad == 3 * expected
 
 
+class TestMul:
+    """Test class for multiply."""
+
+    def test_forwart_backward(self) -> None:
+        """Test forward and backward."""
+        a = np.random.rand(1)
+        b = np.random.rand(1)
+        c = np.random.rand(1)
+
+        xa = Variable(a)
+        xb = Variable(b)
+        xc = Variable(c)
+
+        y = add(mul(xa, xb), xc)
+        assert y.data == np.array(a * b + c)
+
+        y.backward()
+        assert xa.grad == np.array(b)
+        assert xb.grad == np.array(a)
+        assert xc.grad == np.array(1)
+
+
 def test_chain() -> None:
     """Test chain."""
     a = 0.5
@@ -120,6 +144,29 @@ def test_fork() -> None:
 
     assert y.data == 32.0
     assert x.grad == 64.0
+
+
+def test_disable_backprop() -> None:
+    """Test disabling backprop."""
+    x = Variable(np.random.rand(1))
+    t = square(x)
+    y = square(t)
+    y.backward()
+    assert t.creator is not None
+    assert t.generation == 1
+    assert y.creator is not None
+    assert y.generation == 2
+
+    with no_grad():
+        x.cleargrad()
+        t = square(x)
+        y = square(t)
+        assert t.creator is None
+        assert t.generation == 0
+        assert y.creator is None
+        assert y.generation == 0
+        with pytest.raises(AttributeError):
+            y.backward()
 
 
 def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps: float = 1e-4) -> float:
