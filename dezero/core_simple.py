@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import contextlib
 import weakref
+from typing import Any, Generator
 
 import numpy as np
 from nptyping import NDArray
 
-from dezero.config import Config
+
+class Config:
+    """Configuration class."""
+
+    enable_backprop = True
 
 
 class Variable:
@@ -181,21 +187,6 @@ class Function:
         raise NotImplementedError()
 
 
-def as_array(x: NDArray | int | float) -> NDArray:
-    """Convert to numpy array."""
-    if np.isscalar(x):
-        return np.array(x)
-    assert isinstance(x, NDArray)
-    return x
-
-
-def as_variable(obj: Variable | NDArray) -> Variable:
-    """Convert to variable."""
-    if isinstance(obj, Variable):
-        return obj
-    return Variable(obj)
-
-
 class Square(Function):
     """Square function class."""
 
@@ -328,6 +319,37 @@ class Pow(Function):
         gx0 = x1 * x0 ** (x1 - 1) * gy
         gx1 = np.log(x0) * x0**x1 * gy
         return [gx0, gx1]
+
+
+@contextlib.contextmanager
+def using_config(name: str, value: Any) -> Generator:
+    """Context manager to change config."""
+    old_value = getattr(Config, name)
+    setattr(Config, name, value)
+    try:
+        yield
+    finally:
+        setattr(Config, name, old_value)
+
+
+def no_grad() -> contextlib._GeneratorContextManager:
+    """Context manager to disable grad."""
+    return using_config("enable_backprop", False)
+
+
+def as_array(x: NDArray | int | float) -> NDArray:
+    """Convert to numpy array."""
+    if np.isscalar(x):
+        return np.array(x)
+    assert isinstance(x, NDArray)
+    return x
+
+
+def as_variable(obj: Variable | NDArray) -> Variable:
+    """Convert to variable."""
+    if isinstance(obj, Variable):
+        return obj
+    return Variable(obj)
 
 
 def square(x: Variable) -> Variable:

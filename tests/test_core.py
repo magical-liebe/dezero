@@ -5,8 +5,8 @@ from typing import Callable
 import numpy as np
 import pytest
 
-from dezero.config import no_grad
-from dezero.core import Function, Variable, as_array, exp, square
+from dezero import Function, Variable, as_array, no_grad
+from dezero.core_simple import exp, square
 
 
 def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps: float = 1e-4) -> float:
