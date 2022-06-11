@@ -7,6 +7,7 @@ import pytest
 
 from dezero import Function, Variable, as_array, no_grad
 from dezero.core_simple import exp, square
+from dezero.utils import get_dot_graph
 
 
 def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps: float = 1e-4) -> float:
@@ -362,10 +363,15 @@ class TestComplexFucntion:
         a = np.array(1.0)
         b = np.array(1.0)
         x = Variable(a)
+        x.name = "x"
         y = Variable(b)
+        y.name = "y"
 
         z = self.goldstein_price(x, y)
+        z.name = "z"
         z.backward()
         num_grad_x, num_grad_y = numerical_diff_two(self.goldstein_price, x, y)
         assert np.allclose(x.grad, num_grad_x)
         assert np.allclose(y.grad, num_grad_y)
+
+        get_dot_graph(z, verbose=True)
