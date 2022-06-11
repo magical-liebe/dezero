@@ -145,13 +145,9 @@ class Variable:
         """Divide for right."""
         return rdiv(self, other)
 
-    def __pow__(self, other: Variable | NDArray | int | float) -> Variable:
+    def __pow__(self, other: int | float) -> Variable:
         """Power."""
         return lpow(self, other)
-
-    def __rpow__(self, other: Variable | NDArray | int | float) -> Variable:
-        """Power for right."""
-        return rpow(self, other)
 
 
 class Function:
@@ -304,21 +300,24 @@ class Div(Function):
 class Pow(Function):
     """Power function class."""
 
+    def __init__(self, c: float | int) -> None:
+        """Initialize."""
+        self.c = c
+
     def forward(self, *xs: NDArray) -> NDArray:
         """Forward propagation."""
-        assert len(xs) == 2
-        x0, x1 = xs
-        y = x0**x1
+        assert len(xs) == 1
+        x = xs[0]
+        y = x**self.c
         return y
 
-    def backward(self, *gys: NDArray) -> list[NDArray]:
+    def backward(self, *gys: NDArray) -> NDArray:
         """Backward propagation."""
         assert len(gys) == 1
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x = self.inputs[0].data
         gy = gys[0]
-        gx0 = x1 * x0 ** (x1 - 1) * gy
-        gx1 = np.log(x0) * x0**x1 * gy
-        return [gx0, gx1]
+        gx = self.c * x ** (self.c - 1) * gy
+        return gx
 
 
 @contextlib.contextmanager
@@ -427,19 +426,8 @@ def rdiv(x0: Variable, x1: Variable | NDArray | int | float) -> Variable:
     return y
 
 
-def lpow(x0: Variable, x1: Variable | NDArray | int | float) -> Variable:
+def lpow(x: Variable, c: int | float) -> Variable:
     """Power function."""
-    if not isinstance(x1, Variable):
-        x1 = as_array(x1)
-    y = Pow()(x0, x1)
-    assert not isinstance(y, list)
-    return y
-
-
-def rpow(x0: Variable, x1: Variable | NDArray | int | float) -> Variable:
-    """Power function for right."""
-    if not isinstance(x1, Variable):
-        x1 = as_array(x1)
-    y = Pow()(x1, x0)
+    y = Pow(c)(x)
     assert not isinstance(y, list)
     return y
