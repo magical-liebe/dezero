@@ -9,6 +9,8 @@ from typing import Any, Generator
 import numpy as np
 from nptyping import NDArray
 
+import dezero
+
 
 class Config:
     """Configuration class."""
@@ -99,6 +101,11 @@ class Variable:
         """Get dtype."""
         return self.data.dtype
 
+    @property
+    def T(self) -> Variable:
+        """Transpose."""
+        return dezero.functions.transpose(self)
+
     def __len__(self) -> int:
         """Get length."""
         return len(self.data)
@@ -149,6 +156,12 @@ class Variable:
     def __pow__(self, other: int | float) -> Variable:
         """Power."""
         return lpow(self, other)
+
+    def reshape(self, shape: tuple[int, ...] | list[int]) -> Variable:
+        """Reshape."""
+        if isinstance(shape, tuple):
+            return dezero.functions.reshape(self, shape)
+        return dezero.functions.reshape(self, tuple(shape))
 
 
 class Function:
