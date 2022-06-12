@@ -5,7 +5,9 @@ from typing import Callable
 import numpy as np
 import pytest
 
-from dezero.core_simple import Function, Variable, as_array, exp, no_grad, square
+from dezero import Function, Variable, as_array, no_grad
+from dezero.core import exp, square
+from dezero.utils import get_dot_graph
 
 
 def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps: float = 1e-4) -> float:
@@ -122,7 +124,7 @@ class TestSquare:
         y.backward()
 
         num_grad = numerical_diff(square, x)
-        assert np.allclose(x.grad, num_grad)
+        assert np.allclose(x.grad.data, num_grad)
 
 
 class TestExp:
@@ -146,7 +148,7 @@ class TestExp:
         y.backward()
 
         num_grad = numerical_diff(exp, x)
-        assert np.allclose(x.grad, num_grad)
+        assert np.allclose(x.grad.data, num_grad)
 
 
 class TestBasicCalculation:
@@ -162,42 +164,42 @@ class TestBasicCalculation:
         z = x + y
         z.backward()
         assert z.data == a + b
-        assert x.grad == 1
-        assert y.grad == 1
+        assert x.grad.data == 1
+        assert y.grad.data == 1
 
         x.cleargrad()
         z = x + 2
         z.backward()
         assert z.data == a + 2
-        assert x.grad == 1
+        assert x.grad.data == 1
 
         x.cleargrad()
         z = x + 3.5
         z.backward()
         assert z.data == a + 3.5
-        assert x.grad == 1
+        assert x.grad.data == 1
 
         x.cleargrad()
         z = 5 + x
         z.backward()
         assert z.data == 5 + a
-        assert x.grad == 1
+        assert x.grad.data == 1
 
         x.cleargrad()
         z = 2.5 + x
         z.backward()
         assert z.data == 2.5 + a
-        assert x.grad == 1
+        assert x.grad.data == 1
 
         x.cleargrad()
         y = x + x
         y.backward()
-        assert x.grad == 2
+        assert x.grad.data == 2
 
         x.cleargrad()
         y = x + x + x
         y.backward()
-        assert x.grad == 3
+        assert x.grad.data == 3
 
     def test_mul(self) -> None:
         """Test multiply."""
@@ -210,26 +212,26 @@ class TestBasicCalculation:
         y = xa * xb
         y.backward()
         assert y.data == a * b
-        assert xa.grad == b
-        assert xb.grad == a
+        assert xa.grad.data == b
+        assert xb.grad.data == a
 
         xa.cleargrad()
         y = xa * 10
         y.backward()
         assert y.data == a * 10
-        assert xa.grad == 10
+        assert xa.grad.data == 10
 
         xa.cleargrad()
         y = 7.5 * xa
         y.backward()
         assert y.data == 7.5 * a
-        assert xa.grad == 7.5
+        assert xa.grad.data == 7.5
 
         xa.cleargrad()
         y = xa * xa
         y.backward()
         assert y.data == a * a
-        assert xa.grad == 2 * a
+        assert xa.grad.data == 2 * a
 
     def test_neg(self) -> None:
         """Test negative."""
@@ -239,7 +241,7 @@ class TestBasicCalculation:
         y = -x
         y.backward()
         assert y.data == -a
-        assert x.grad == -1
+        assert x.grad.data == -1
 
     def test_sub(self) -> None:
         """Test subtract."""
@@ -251,28 +253,28 @@ class TestBasicCalculation:
         y = xa - xb
         y.backward()
         assert y.data == a - b
-        assert xa.grad == 1
-        assert xb.grad == -1
+        assert xa.grad.data == 1
+        assert xb.grad.data == -1
 
         xa.cleargrad()
         xb.cleargrad()
         y = xb - xa
         y.backward()
         assert y.data == b - a
-        assert xa.grad == -1
-        assert xb.grad == 1
+        assert xa.grad.data == -1
+        assert xb.grad.data == 1
 
         xa.cleargrad()
         y = xa - 2
         y.backward()
         assert y.data == a - 2
-        assert xa.grad == 1
+        assert xa.grad.data == 1
 
         xa.cleargrad()
         y = 2.5 - xa
         y.backward()
         assert y.data == 2.5 - a
-        assert xa.grad == -1
+        assert xa.grad.data == -1
 
     def test_div(self) -> None:
         """Test divide."""
@@ -284,21 +286,21 @@ class TestBasicCalculation:
         y = xa / xb
         y.backward()
         assert y.data == a / b
-        assert xa.grad == 1 / b
-        assert xb.grad == -a / b**2
+        assert xa.grad.data == 1 / b
+        assert xb.grad.data == -a / b**2
 
         xa.cleargrad()
         xb.cleargrad()
         y = xa / 2
         y.backward()
         assert y.data == a / 2
-        assert xa.grad == 1 / 2
+        assert xa.grad.data == 1 / 2
 
         xa.cleargrad()
         y = 7.5 / xa
         y.backward()
         assert y.data == 7.5 / a
-        assert xa.grad == -7.5 / a**2
+        assert xa.grad.data == -7.5 / a**2
 
     def test_pow(self) -> None:
         """Test power."""
@@ -308,7 +310,7 @@ class TestBasicCalculation:
         y = x**3
         y.backward()
         assert y.data == a**3
-        assert x.grad == 3 * a**2
+        assert x.grad.data == 3 * a**2
 
 
 class TestComplexFucntion:
@@ -329,8 +331,8 @@ class TestComplexFucntion:
         assert z.data == a**2 + b**2
 
         z.backward()
-        assert x.grad == 2 * a
-        assert y.grad == 2 * b
+        assert x.grad.data == 2 * a
+        assert y.grad.data == 2 * b
 
     def matyas(self, x: Variable, y: Variable) -> Variable:
         """Matyas function."""
@@ -347,8 +349,8 @@ class TestComplexFucntion:
         assert z.data == 0.26 * (a**2 + b**2) - 0.48 * a * b
 
         z.backward()
-        assert x.grad == 2 * a * 0.26 - 0.48 * b
-        assert y.grad == 2 * b * 0.26 - 0.48 * a
+        assert x.grad.data == 2 * a * 0.26 - 0.48 * b
+        assert y.grad.data == 2 * b * 0.26 - 0.48 * a
 
     def goldstein_price(self, x: Variable, y: Variable) -> Variable:
         """Goldstein-Price function."""
@@ -369,5 +371,47 @@ class TestComplexFucntion:
         z.name = "z"
         z.backward()
         num_grad_x, num_grad_y = numerical_diff_two(self.goldstein_price, x, y)
-        assert np.allclose(x.grad, num_grad_x)
-        assert np.allclose(y.grad, num_grad_y)
+        assert np.allclose(x.grad.data, num_grad_x)
+        assert np.allclose(y.grad.data, num_grad_y)
+
+        get_dot_graph(z, verbose=True)
+
+
+class TestSecondDerivative:
+    """Test class for second derivative."""
+
+    def f(self, x: Variable) -> Variable:
+        """Test function."""
+        return x**4 - 2 * x**2
+
+    def test_second_derivative(self) -> None:
+        """Test second derivative."""
+        x = Variable(np.array(2.0))
+        y = self.f(x)
+        y.backward(create_graph=True)
+        assert x.grad.data == np.array(24.0)
+
+        gx = x.grad
+        x.cleargrad()
+        gx.backward()
+        print(x.grad)
+        assert x.grad.data == np.array(44.0)
+
+    def test_newtons_method(self) -> None:
+        """Test newton's method."""
+        x = Variable(np.array(2.0))
+        iters = 10
+
+        for i in range(iters):
+            y = self.f(x)
+            x.cleargrad()
+            y.backward(create_graph=True)
+
+            gx = x.grad
+            x.cleargrad()
+            gx.backward()
+            gx2 = x.grad
+
+            x.data -= gx.data / gx2.data
+
+        assert np.allclose(x.data, np.array(1.0))

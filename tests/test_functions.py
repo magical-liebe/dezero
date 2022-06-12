@@ -9,7 +9,7 @@ from dezero.functions import sin
 class TestFunctions:
     """Tests for functions."""
 
-    def test_sin(self):
+    def test_sin(self) -> None:
         """Test sin function."""
         a = np.array(np.pi / 4)
 
@@ -18,4 +18,4 @@ class TestFunctions:
         y.backward()
 
         assert y.data == np.sin(a)
-        assert x.grad == np.cos(a)
+        assert x.grad.data == np.cos(a)

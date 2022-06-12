@@ -3,8 +3,7 @@
 import numpy as np
 from nptyping import NDArray
 
-from dezero import Function
-from dezero.core_simple import Variable
+from dezero import Function, Variable
 
 
 class Sin(Function):
@@ -17,12 +16,13 @@ class Sin(Function):
         y = np.sin(x)
         return y
 
-    def backward(self, *gys: NDArray) -> NDArray:
+    def backward(self, *gys: Variable) -> Variable:
         """Backward method."""
+        assert len(self.inputs) == 1
         assert len(gys) == 1
         gy = gys[0]
-        x = self.inputs[0].data
-        gx = gy * np.cos(x)
+        x = self.inputs[0]
+        gx = gy * np.cos(x.data)
         return gx
 
 

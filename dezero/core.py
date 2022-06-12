@@ -28,7 +28,7 @@ class Variable:
 
         self.data = data
         self.name = name
-        self.grad: NDArray | None = None
+        self.grad: Variable | None = None
         self.creator: Function | None = None
         self.generation: int = 0
 
@@ -41,10 +41,10 @@ class Variable:
         """Clear gradient."""
         self.grad = None
 
-    def backward(self, retain_grad: bool = False) -> None:
+    def backward(self, retain_grad: bool = False, create_graph: bool = False) -> None:
         """Backward propagation."""
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = Variable(np.ones_like(self.data))
 
         funcs: list[Function] = []
         seen_set = set()
@@ -60,18 +60,20 @@ class Variable:
         while funcs:
             f = funcs.pop()
             gys = [output().grad for output in f.outputs]
-            gxs = f.backward(*gys)
-            if not isinstance(gxs, list):
-                gxs = [gxs]
 
-            for x, gx in zip(f.inputs, gxs):
-                if x.grad is None:
-                    x.grad = gx
-                else:
-                    x.grad = x.grad + gx
+            with using_config("enable_backprop", create_graph):
+                gxs = f.backward(*gys)
+                if not isinstance(gxs, list):
+                    gxs = [gxs]
 
-                if x.creator is not None:
-                    add_func(x.creator)
+                for x, gx in zip(f.inputs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx
+
+                    if x.creator is not None:
+                        add_func(x.creator)
 
             if not retain_grad:
                 for y in f.outputs:
@@ -177,7 +179,7 @@ class Function:
         """Forward propagation."""
         raise NotImplementedError()
 
-    def backward(self, *gys: NDArray) -> NDArray | list[NDArray]:
+    def backward(self, *gys: Variable) -> Variable | list[Variable]:
         """Backward propagation."""
         raise NotImplementedError()
 
@@ -189,9 +191,11 @@ class Square(Function):
         """Forward propagation."""
         return xs[0] ** 2
 
-    def backward(self, *gys: NDArray) -> NDArray:
+    def backward(self, *gys: Variable) -> Variable:
         """Backward propagation."""
-        x = self.inputs[0].data
+        assert len(self.inputs) == 1
+        assert len(gys) == 1
+        x = self.inputs[0]
         gx = 2 * x * gys[0]
         return gx
 
@@ -203,10 +207,12 @@ class Exp(Function):
         """Forward propagation."""
         return np.exp(xs[0])
 
-    def backward(self, *gys: NDArray) -> NDArray:
+    def backward(self, *gys: Variable) -> Variable:
         """Backward propagation."""
-        x = self.inputs[0].data
-        gx = np.exp(x) * gys[0]
+        assert len(self.inputs) == 1
+        assert len(gys) == 1
+        x = self.inputs[0]
+        gx = np.exp(x.data) * gys[0]
         return gx
 
 
@@ -220,7 +226,7 @@ class Add(Function):
         y = x0 + x1
         return y
 
-    def backward(self, *gys: NDArray) -> list[NDArray]:
+    def backward(self, *gys: Variable) -> list[Variable]:
         """Backward propagation."""
         assert len(gys) == 1
         return [gys[0], gys[0]]
@@ -236,11 +242,12 @@ class Mul(Function):
         y = x0 * x1
         return y
 
-    def backward(self, *gys: NDArray) -> list[NDArray]:
+    def backward(self, *gys: Variable) -> list[Variable]:
         """Backward propagation."""
+        assert len(self.inputs) == 2
         assert len(gys) == 1
         gy = gys[0]
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         return [gy * x1, gy * x0]
 
 
@@ -253,7 +260,7 @@ class Neg(Function):
         x = xs[0]
         return -x
 
-    def backward(self, *gys: NDArray) -> NDArray:
+    def backward(self, *gys: Variable) -> Variable:
         """Backward propagation."""
         assert len(gys) == 1
         gy = gys[0]
@@ -270,7 +277,7 @@ class Sub(Function):
         y = x0 - x1
         return y
 
-    def backward(self, *gys: NDArray) -> list[NDArray]:
+    def backward(self, *gys: Variable) -> list[Variable]:
         """Backward propagation."""
         assert len(gys) == 1
         return [gys[0], -gys[0]]
@@ -286,10 +293,11 @@ class Div(Function):
         y = x0 / x1
         return y
 
-    def backward(self, *gys: NDArray) -> list[NDArray]:
+    def backward(self, *gys: Variable) -> list[Variable]:
         """Backward propagation."""
+        assert len(self.inputs) == 2
         assert len(gys) == 1
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         gy = gys[0]
         gx0 = gy / x1
         gx1 = gy * (-x0 / x1**2)
@@ -310,10 +318,11 @@ class Pow(Function):
         y = x**self.c
         return y
 
-    def backward(self, *gys: NDArray) -> NDArray:
+    def backward(self, *gys: Variable) -> Variable:
         """Backward propagation."""
+        assert len(self.inputs) == 1
         assert len(gys) == 1
-        x = self.inputs[0].data
+        x = self.inputs[0]
         gy = gys[0]
         gx = self.c * x ** (self.c - 1) * gy
         return gx

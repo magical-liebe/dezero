@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-from dezero.core_simple import Function, Variable
+from dezero import Function, Variable
 
 
 def _dot_var(v: Variable, verbose: bool = False) -> str:
