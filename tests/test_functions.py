@@ -99,3 +99,19 @@ class TestFunctions:
         y.backward()
         assert y.shape == (2, 1, 4, 3)
         assert x.grad.shape == x.shape
+
+    def test_sum(self) -> None:
+        """Test sum function."""
+        a = np.array([1, 2, 3, 4, 5, 6])
+        x = Variable(a)
+        y = F.sum(x)
+        # y.backward()
+        assert y.data == np.sum(a)
+        # assert np.allclose(x.grad.data, np.ones_like(x.data))
+
+        a = np.array([[1, 2, 3], [4, 5, 6]])
+        x = Variable(a)
+        y = F.sum(x)
+        # y.backward()
+        assert y.data == np.sum(a)
+        # assert np.allclose(x.grad.data, np.ones_like(x.data))

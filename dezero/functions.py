@@ -3,6 +3,7 @@
 import numpy as np
 from nptyping import NDArray
 
+from dezero import utils
 from dezero.core import Function, Variable, as_variable
 
 
@@ -113,6 +114,31 @@ class Transpose(Function):
         return transpose(gy, inv_axes)
 
 
+class Sum(Function):
+    """Sum function."""
+
+    def __init__(self, axis: int, keepdims: bool) -> None:
+        """Initialize."""
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def forward(self, *xs: NDArray) -> NDArray:
+        """Forward method."""
+        assert len(xs) == 1
+        x = xs[0]
+        self.x_shape = x.shape
+        y = x.sum(axis=self.axis, keepdims=self.keepdims)
+        return y
+
+    def backward(self, *gys: Variable) -> Variable:
+        """Backward method."""
+        assert len(gys) == 1
+        gy = gys[0]
+        gy = utils.reshape_sum_backward(gy, self.x_shape, self.axis, self.keepdims)
+        gx = broadcast_to(gy, self.x_shape)
+        return gx
+
+
 def sin(x: Variable | NDArray) -> Variable:
     """Sin function."""
     y = Sin()(x)
@@ -148,3 +174,15 @@ def transpose(x: Variable | NDArray, axes: tuple[int, ...] = None) -> Variable:
     y = Transpose(axes)(x)
     assert not isinstance(y, list)
     return y
+
+
+def sum(x: Variable | NDArray, axis: int = None, keepdims: bool = False) -> Variable:
+    """Sum function."""
+    y = Sum(axis, keepdims)(x)
+    assert not isinstance(y, list)
+    return y
+
+
+def broadcast_to(x: Variable | NDArray, shape: tuple[int, ...]) -> Variable:
+    """Broadcast to target shape."""
+    raise NotImplementedError

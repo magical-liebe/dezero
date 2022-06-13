@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-from dezero import Function, Variable
+from dezero.core import Function, Variable
 
 
 def _dot_var(v: Variable, verbose: bool = False) -> str:
@@ -72,3 +72,27 @@ def plot_dot_graph(output: Variable, verbose: bool = True, to_file: str = "graph
     extension = os.path.splitext(to_file)[1][1:]
     cmd = f"dot {graph_path} -T {extension} -o {to_file}"
     subprocess.run(cmd, shell=True)
+
+
+def reshape_sum_backward(
+    gy: Variable, x_shape: tuple[int, ...] | list[int], axis: int | tuple[int, ...], keepdims: bool
+) -> Variable:
+    """Reshape gradient appropriately for dezero.functions.sum's backward."""
+    ndim = len(x_shape)
+    tupled_axis = axis
+    if axis is None:
+        tupled_axis = None
+    elif not isinstance(axis, tuple):
+        tupled_axis = (axis,)
+
+    if not (ndim == 0 or tupled_axis is None or keepdims):
+        assert isinstance(tupled_axis, tuple)
+        actual_axis = [a if a >= 0 else a + ndim for a in tupled_axis]
+        shape = list(gy.shape)
+        for a in sorted(actual_axis):
+            shape.insert(a, 1)
+    else:
+        shape = list(gy.shape)
+
+    gy = gy.reshape(shape)  # reshape
+    return gy
