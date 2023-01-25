@@ -219,19 +219,19 @@ pyflakes = ">=3.0.0,<3.1.0"
 
 [[package]]
 name = "flake8-annotations"
-version = "2.9.0"
+version = "3.0.0"
 description = "Flake8 Type Annotation Checks"
 category = "dev"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8.1,<4.0.0"
 files = [
-    {file = "flake8-annotations-2.9.0.tar.gz", hash = "sha256:63fb3f538970b6a8dfd84125cf5af16f7b22e52d5032acb3b7eb23645ecbda9b"},
-    {file = "flake8_annotations-2.9.0-py3-none-any.whl", hash = "sha256:84f46de2964cb18fccea968d9eafce7cf857e34d913d515120795b9af6498d56"},
+    {file = "flake8_annotations-3.0.0-py3-none-any.whl", hash = "sha256:ea927d31016515e9aa6e256651d74baeeee6fa4ad3f8383715ec5c0460a4c225"},
+    {file = "flake8_annotations-3.0.0.tar.gz", hash = "sha256:88c8b35a0db10b9a92be69ed3f81494509a18db1c3162551e57bc0fc35fab065"},
 ]
 
 [package.dependencies]
-attrs = ">=21.4,<22.0"
-flake8 = ">=3.7"
+attrs = ">=21.4"
+flake8 = ">=5.0"
 
 [[package]]
 name = "flake8-docstrings"
@@ -864,4 +864,4 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10,<3.11"
-content-hash = "d6916f90ccc9fd38eb6556e8b882aa0571be7ebf729db2bcde73c22a8fcf493e"
+content-hash = "a5fcc02d8d66533c3a968726c45dd9d1ece2a186bba9475fb7bf260db7bf73e1"
