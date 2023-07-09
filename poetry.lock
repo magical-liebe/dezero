@@ -479,6 +479,7 @@ files = [
     {file = "numpy-1.25.1-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:35a9527c977b924042170a0887de727cd84ff179e478481404c5dc66b4170009"},
     {file = "numpy-1.25.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0d3fe3dd0506a28493d82dc3cf254be8cd0d26f4008a417385cbf1ae95b54004"},
     {file = "numpy-1.25.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:012097b5b0d00a11070e8f2e261128c44157a8689f7dedcf35576e525893f4fe"},
+    {file = "numpy-1.25.1.tar.gz", hash = "sha256:9a3a9f3a61480cc086117b426a8bd86869c213fc4072e606f01c4e4b66eb92bf"},
 ]
 
 [[package]]
