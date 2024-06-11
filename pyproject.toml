@@ -7,7 +7,7 @@ authors = ["りーべ <magical.liebe@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10,<3.11"
 numpy = "^1.22.4"
-single-source = "^0.3.0"
+single-source = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 black = "^24.0.0"
